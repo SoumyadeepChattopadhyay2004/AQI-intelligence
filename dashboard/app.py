@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+import os
 import plotly.express as px
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
@@ -32,7 +33,7 @@ st.markdown("""
 }
 
 html, body, [class*="css"] {
-    font-family: 'Times New Roman', monospace;
+    font-family: 'DM Mono', monospace;
     background: var(--bg) !important;
     color: var(--text) !important;
 }
@@ -51,9 +52,9 @@ section[data-testid="stSidebar"] * { color: var(--text) !important; }
 }
 [data-testid="stMetric"]:hover { border-color: var(--accent1); }
 [data-testid="stMetricLabel"] { color: var(--muted) !important; font-size: 0.7rem; letter-spacing: 0.12em; text-transform: uppercase; }
-[data-testid="stMetricValue"] { color: var(--accent1) !important; font-family: 'Times New Roman', sans-serif; font-weight: 800; font-size: 2rem !important; }
+[data-testid="stMetricValue"] { color: var(--accent1) !important; font-family: 'Syne', sans-serif; font-weight: 800; font-size: 2rem !important; }
 
-h1, h2, h3 { font-family: 'Times New Roman', sans-serif !important; letter-spacing: -0.02em; }
+h1, h2, h3 { font-family: 'Syne', sans-serif !important; letter-spacing: -0.02em; }
 h1 { font-size: 2.6rem !important; font-weight: 800 !important; }
 h2 { font-size: 1.5rem !important; font-weight: 700 !important; color: var(--accent1) !important; }
 hr { border-color: var(--border) !important; margin: 1.5rem 0 !important; }
@@ -90,7 +91,7 @@ hr { border-color: var(--border) !important; margin: 1.5rem 0 !important; }
     background: radial-gradient(circle, rgba(56,189,248,0.15) 0%, transparent 70%);
     border-radius: 50%;
 }
-.hero-title { font-family: 'Times New Roman', sans-serif; font-size: 2.4rem; font-weight: 800; color: #fff; line-height: 1.1; margin: 0; }
+.hero-title { font-family: 'Syne', sans-serif; font-size: 2.4rem; font-weight: 800; color: #fff; line-height: 1.1; margin: 0; }
 .hero-sub   { color: var(--muted); font-size: 0.85rem; margin-top: 0.4rem; }
 .hero-tag   { font-size: 0.68rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--accent1); margin-bottom: 0.5rem; }
 </style>
@@ -103,8 +104,8 @@ hr { border-color: var(--border) !important; margin: 1.5rem 0 !important; }
 DARK_LAYOUT = dict(
     paper_bgcolor="rgba(0,0,0,0)",
     plot_bgcolor="rgba(0,0,0,0)",
-    font=dict(family="Times New Roman, sans-serif", color="#94a3b8"),
-    title_font=dict(family="Times New Roman, sans-serif", color="#e2e8f0", size=15),
+    font=dict(family="DM Mono, monospace", color="#94a3b8"),
+    title_font=dict(family="Syne, sans-serif", color="#e2e8f0", size=15),
     xaxis=dict(gridcolor="#1e2d45", linecolor="#1e2d45", zerolinecolor="#1e2d45"),
     yaxis=dict(gridcolor="#1e2d45", linecolor="#1e2d45", zerolinecolor="#1e2d45"),
     colorway=["#38bdf8","#f472b6","#a78bfa","#4ade80","#facc15","#fb923c","#f87171"],
@@ -130,9 +131,23 @@ BUCKET_ORDER = ["Good","Satisfactory","Moderate","Poor","Very Poor","Severe"]
 # DATA LOADING
 # ─────────────────────────────────────────────
 
+# Search for city_day.csv starting from app.py's directory, then walking up
+def _find_csv(filename):
+    current = os.path.dirname(os.path.abspath(__file__))
+    for _ in range(4):  # look up to 4 levels up
+        candidate = os.path.join(current, filename)
+        if os.path.exists(candidate):
+            return candidate
+        current = os.path.dirname(current)
+    raise FileNotFoundError(
+        f"Could not find '{filename}' in or above: {os.path.dirname(os.path.abspath(__file__))}\n"
+        f"Please place city_day.csv in the same folder as app.py."
+    )
+
 @st.cache_data
 def load_data():
-    df = pd.read_csv("city_day.csv", parse_dates=["Date"])
+    path = _find_csv("city_day.csv")
+    df = pd.read_csv(path, parse_dates=["Date"])
     df["Year"]  = df["Date"].dt.year
     df["Month"] = df["Date"].dt.month
     return df
@@ -258,7 +273,7 @@ fig_donut.update_layout(title="AQI Categories", height=340,
     showlegend=False,
     annotations=[dict(text=f"<b>{center_text}</b>", x=0.5, y=0.5,
                       font_size=15, font_color="#e2e8f0",
-                      font_family="Times New Roman, sans-serif", showarrow=False)]
+                      font_family="Syne, sans-serif", showarrow=False)]
 )
 st.plotly_chart(fig_donut, use_container_width=True)
 
@@ -672,14 +687,14 @@ fig_table = dark(go.Figure(go.Table(
     header=dict(
         values=["<b>Pollutant</b>","<b>Mean</b>","<b>Median</b>","<b>Std Dev</b>","<b>Min</b>","<b>Max</b>"],
         fill_color="#1e2d45",
-        font=dict(color="#38bdf8", size=12, family="Times New Roman, sans-serif"),
+        font=dict(color="#38bdf8", size=12, family="Syne, sans-serif"),
         align="center", height=36,
         line_color="#0b0f1a",
     ),
     cells=dict(
         values=[poll_stats[c] for c in poll_stats.columns],
         fill_color=[["#111827","#0f172a"] * (len(poll_stats)//2 + 1)],
-        font=dict(color="#e2e8f0", size=11, family="Times New Roman, sans-serif"),
+        font=dict(color="#e2e8f0", size=11, family="DM Mono, monospace"),
         align="center", height=30,
         line_color="#1e2d45",
     )
